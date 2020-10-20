@@ -11,23 +11,27 @@
 import requests
 import json
 from f5.bigip import ManagementRoot
+import time
+
+### Set some static variables for while
+d = "Delta"
+deltaLevel = {}
+
+### Run loop unless base security level Delta is returned
+while deltaLevel != d: 
 
 ### Run a call to our Risk Engine API server and place the payload into a variable
-response = requests.get("http://x.x.x.x:5000/api/people")
+    response = requests.get("http://x.x.x.x/api/people")
 
 ### Parse the variable JSON payload and pull the Hanscom base level status
 ### Place base level status in variable deltaLevel
-apiresults = response.json()
-deltaLevel = apiresults[0]["fname"]
-lockDown = "Delta"
-
-### Logic to determine if base level status "Delta" is a match
-### if a match occurs then send a call to APM to terminate all user sessions
-print("The current FPCON level at Hanscom is: " + deltaLevel)
-
-if deltaLevel == lockDown:
-    mgmt = ManagementRoot("x.x.x.x",'admin','******')
+    apiresults = response.json()
+    deltaLevel = apiresults[0]["fname"]
+    print("The current FPCON level at Hanscom is: " + deltaLevel)
+    time.sleep(10)
+### If base level security matches Delta then run the else statement
+else:
+    mgmt = ManagementRoot("x.x.x.x",'admin','x.x.x.x')
     x = mgmt.tm.util.bash.exec_cmd('run', utilCmdArgs='-c "/usr/bin/sessiondump --delete all"')
     print("FPCON level is Delta, terminating all sessions.")
     print(x.commandResult)
-    
